@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>ВОЛЖСКИЙ РЕЙС | ДИКИЙ ТУР</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Space Grotesk', 'Inter', sans-serif;
+      background: #0a0a0a;
+      color: #f0f0f0;
+      overflow-x: hidden;
+    }
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .bg-dynamic {
+      background: linear-gradient(125deg, #0f0c1f 0%, #1a0f2e 25%, #0d1b2a 50%, #1b0f2a 75%, #0f0c1f 100%);
+      background-size: 200% 200%;
+      animation: gradientShift 15s ease infinite;
+    }
+    .gentle-glow {
+      text-shadow: 0 0 8px rgba(255,0,193,0.4), 0 0 15px rgba(255,136,0,0.3);
+      animation: gentlePulse 3s ease-in-out infinite;
+    }
+    @keyframes gentlePulse {
+      0% { text-shadow: 0 0 5px rgba(255,0,193,0.3), 0 0 10px rgba(255,136,0,0.2); }
+      50% { text-shadow: 0 0 15px rgba(255,0,193,0.6), 0 0 25px rgba(255,136,0,0.4); }
+      100% { text-shadow: 0 0 5px rgba(255,0,193,0.3), 0 0 10px rgba(255,136,0,0.2); }
+    }
+    .navbar {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(12px);
+      z-index: 1000;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      border-bottom: 2px solid #ff00c1;
+      box-shadow: 0 0 20px rgba(255,0,193,0.3);
+    }
+    .logo {
+      font-weight: 900;
+      font-size: 1.6rem;
+      background: linear-gradient(90deg, #ff00c1, #ff8800, #00ff9d);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      letter-spacing: -0.5px;
+    }
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+    }
+    .nav-links a {
+      color: #fff;
+      text-decoration: none;
+      font-weight: 600;
+      transition: 0.2s;
+      text-transform: uppercase;
+      font-size: 0.85rem;
+      letter-spacing: 1px;
+    }
+    .nav-links a:hover {
+      color: #ff8800;
+      text-shadow: 0 0 8px #ff8800;
+    }
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      background: radial-gradient(circle at 20% 30%, #1a0f2e, #05030a);
+    }
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(0deg, rgba(255,0,193,0.05) 0px, rgba(255,0,193,0.05) 2px, transparent 2px, transparent 8px);
+      pointer-events: none;
+    }
+    .hero h1 {
+      font-size: clamp(3rem, 9vw, 6rem);
+      font-weight: 900;
+      background: linear-gradient(135deg, #ff00c1, #ff8800, #00ff9d);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin-bottom: 1rem;
+    }
+    .btn-crazy {
+      background: linear-gradient(90deg, #ff00c1, #ff8800);
+      border: none;
+      padding: 14px 38px;
+      font-weight: 800;
+      font-size: 1.1rem;
+      transition: 0.3s;
+      cursor: pointer;
+      color: black;
+      margin-top: 2rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      clip-path: polygon(10% 0%, 100% 0%, 90% 100%, 0% 100%);
+    }
+    .btn-crazy:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 30px #ff00c1;
+    }
+    .flip-cards {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2rem;
+      justify-content: center;
+      margin: 4rem 0;
+    }
+    .flip-card {
+      width: 320px;
+      height: 440px;
+      perspective: 1500px;
+      cursor: pointer;
+    }
+    .flip-card-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transition: transform 0.8s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+      transform-style: preserve-3d;
+      border-radius: 0px;
+      clip-path: polygon(0% 0%, 100% 0%, 95% 100%, 5% 100%);
+    }
+    .flip-card:hover .flip-card-inner {
+      transform: rotateY(180deg);
+    }
+    .flip-front, .flip-back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      backface-visibility: hidden;
+      padding: 1.5rem;
+      border: 2px solid #ff00c1;
+      box-shadow: 8px 8px 0px #ff8800;
+    }
+    .flip-front {
+      background-size: cover;
+      background-position: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      color: white;
+      background-blend-mode: overlay;
+    }
+    .flip-back {
+      background: #0a0a0a;
+      transform: rotateY(180deg);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 12px;
+      border-color: #00ff9d;
+    }
+    /* Модалки с каруселью */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.95);
+      backdrop-filter: blur(12px);
+      z-index: 2000;
+      padding: 2rem;
+    }
+    .modal.active {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-content {
+      max-width: 1000px;
+      width: 90%;
+      background: #0f0f1a;
+      border: 3px solid #ff00c1;
+      padding: 2rem;
+      position: relative;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 20px 20px 0px #ff8800;
+    }
+    .modal-close {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      font-size: 2rem;
+      cursor: pointer;
+      color: #ff00c1;
+      font-weight: bold;
+      z-index: 10;
+    }
+    /* Стили для карусели внутри модалки */
+    .modal-gallery-swiper {
+      width: 100%;
+      height: 350px;
+      margin: 1.5rem 0;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 2px solid #ff8800;
+    }
+    .modal-gallery-swiper .swiper-slide {
+      background-size: cover;
+      background-position: center;
+      display: flex;
+      align-items: flex-end;
+      justify-content: flex-start;
+      padding: 1rem;
+      font-weight: bold;
+      text-shadow: 0 0 8px black;
+      font-size: 1rem;
+    }
+    .modal-gallery-swiper .swiper-button-next,
+    .modal-gallery-swiper .swiper-button-prev {
+      color: #ff00c1;
+    }
+    .modal-gallery-swiper .swiper-pagination-bullet-active {
+      background: #ff00c1;
+    }
+    .program-list li {
+      padding: 0.5rem 0;
+      border-left: 3px solid #ff00c1;
+      padding-left: 1rem;
+      margin: 0.5rem 0;
+      list-style: none;
+    }
+    .swiper-main {
+      width: 100%;
+      height: 450px;
+      margin: 3rem 0;
+      border: 2px solid #ff00c1;
+    }
+    .swiper-main .swiper-slide {
+      background-size: cover;
+      background-position: center;
+      display: flex;
+      align-items: flex-end;
+      padding: 1rem;
+      font-weight: bold;
+      text-shadow: 0 0 8px black;
+    }
+    .map-wrapper {
+      border: 3px solid #ff00c1;
+      padding: 0.5rem;
+      margin: 3rem 0;
+      background: #000;
+    }
+    #dynamic-map {
+      height: 480px;
+      width: 100%;
+      z-index: 1;
+      filter: hue-rotate(10deg);
+    }
+    .badge-rout {
+      background: #ff00c1;
+      display: inline-block;
+      padding: 0.2rem 1rem;
+      font-weight: bold;
+      color: black;
+      clip-path: polygon(10% 0%, 100% 0%, 90% 100%, 0% 100%);
+    }
+    .fish-tag {
+      background: rgba(0,255,157,0.2);
+      padding: 4px 12px;
+      border: 1px solid #00ff9d;
+      color: #00ff9d;
+      font-weight: 600;
+    }
+    .info-card-crazy {
+      background: rgba(10,10,20,0.8);
+      border-left: 6px solid #ff8800;
+      padding: 1.5rem;
+      transition: 0.2s;
+    }
+    footer {
+      background: #000;
+      padding: 2rem;
+      text-align: center;
+      border-top: 2px solid #ff00c1;
+    }
+    .container {
+      max-width: 1300px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    @media (max-width: 700px) {
+      .navbar { flex-direction: column; gap: 0.5rem; }
+      .flip-card { width: 280px; height: 400px; }
+      .modal-gallery-swiper { height: 250px; }
+    }
+  </style>
+</head>
+<body class="bg-dynamic">
+
+<nav class="navbar">
+  <div class="logo">⚡ ВОЛЖСКИЙ РЕЙС ⚡</div>
+  <div class="nav-links">
+    <a href="#hero">СТАРТ</a>
+    <a href="#flip">МАРШРУТ</a>
+    <a href="#map">КАРТА</a>
+    <a href="#gallery">МОМЕНТЫ</a>
+  </div>
+</nav>
+
+<section id="hero" class="hero">
+  <div class="hero-content" data-aos="fade-up" data-aos-duration="1200">
+    <h1 class="gentle-glow">САЛАМ, БРАТВА!<br>ЛЕТИМ В РОССИЮ</h1>
+    <p style="font-size: 1.2rem; max-width: 700px; margin: 0 auto; color: #ccc; text-transform: uppercase; letter-spacing: 2px;">12 дней огня: тольятти → самара → подвалье → 10 кордон → казань</p>
+    <button class="btn-crazy" id="scrollBtn">▶ ПОГНАЛИ ◀</button>
+  </div>
+</section>
+
+<div class="container" id="flip" style="max-width:1300px; margin:0 auto; padding:2rem;">
+  <div style="text-align: center; margin-bottom: 2rem;">
+    <span class="badge-rout">🔥 5 ЛЕГЕНДАРНЫХ ТОЧЕК 🔥</span>
+    <h2 style="font-size: 2.5rem; margin-top: 0.5rem; color:#ff8800;">НАЖМИ НА КАРТОЧКУ — УЗНАЙ ПРОГРАММУ</h2>
+  </div>
+  <div class="flip-cards">
+    <div class="flip-card" data-modal="togliatti"><div class="flip-card-inner"><div class="flip-front" style="background-image: linear-gradient(0deg, #000000aa, #00000066), url('file:///C:/Users/Элинка/Desktop/приглашение/фото/scale_1200.jpg');"><h3>ТОЛЬЯТТИ</h3><p>АвтоВАЗ, лес, набережная</p></div><div class="flip-back"><p><i class="fas fa-hand-pointer"></i> ЖМИ!</p></div></div></div>
+    <div class="flip-card" data-modal="samara"><div class="flip-card-inner"><div class="flip-front" style="background-image: linear-gradient(0deg, #000000aa, #00000066), url('file:///C:/Users/Элинка/Desktop/приглашение/фото/i%20(3).webp');"><h3>САМАРА</h3><p>Набережная, дигустация жигулёвского пива</p></div><div class="flip-back"><h3>🍻 ДНИ 3</h3><p>Самая длинная набережная, Жигулёвское.</p><p><i class="fas fa-hand-pointer"></i> ЖМИ!</p></div></div></div>
+    <div class="flip-card" data-modal="podvalie"><div class="flip-card-inner"><div class="flip-front" style="background-image: linear-gradient(0deg, #000000aa, #00000066), url('file:///C:/Users/Элинка/Desktop/приглашение/фото/Подвальский_залив_91.jpg');"><h3>ПОДВАЛЬСКИЕ ТЕРРАСЫ</h3><p>МОЙ ДОМ + ОМИК</p></div><div class="flip-back"><h3>🏡 ДНИ 5-7</h3><p>Свой дом, омик, шашлыки, рыбалка.</p><p><i class="fas fa-hand-pointer"></i> ЖМИ!</p></div></div></div>
+    <div class="flip-card" data-modal="kordon"><div class="flip-card-inner"><div class="flip-front" style="background-image: linear-gradient(0deg, #000000aa, #00000066), url('file:///C:/Users/Элинка/Desktop/приглашение/фото/XXXL%20(5).webp');"><h3>10-й КОРДОН</h3><p>УАЗик adventure</p></div><div class="flip-back"><h3>🚙 ЭКСПЕДИЦИЯ</h3><p>УАЗик, дикая природа, трофейная рыба.</p><p><i class="fas fa-hand-pointer"></i> ЖМИ!</p></div></div></div>
+    <div class="flip-card" data-modal="kazan"><div class="flip-card-inner"><div class="flip-front" style="background-image: linear-gradient(0deg, #000000aa, #00000066), url('file:///C:/Users/Элинка/Desktop/приглашение/фото/i%20(7).webp');"><h3>КАЗАНЬ</h3><p>Кремль + движ</p></div><div class="flip-back"><h3>🎉 ДНИ 8-11</h3><p>Кремль, аквапарк, барная улица.</p><p><i class="fas fa-hand-pointer"></i> ЖМИ!</p></div></div></div>
+  </div>
+</div>
+
+<!-- МОДАЛЬНЫЕ ОКНА С КАРУСЕЛЯМИ ФОТОГРАФИЙ -->
+<!-- Тольятти -->
+<div id="modal-togliatti" class="modal">
+  <div class="modal-content">
+    <span class="modal-close">&times;</span>
+    <h2 style="color:#ff00c1">ТОЛЬЯТТИ</h2>
+    <div class="modal-gallery-swiper swiper modal-swiper" data-modal-swiper="togliatti">
+      <div class="swiper-wrapper">
+        <div class="swiper-slide" style="background-image: url('file:///C:/Users/Элинка/Desktop/приглашение/фото/автовваз.jpg');">🏭 АвтоВАЗ — легендарный завод</div>
+        <div class="swiper-slide" style="background-image: url('file:///C:/Users/Элинка/Desktop/приглашение/фото/kuneevsky-forest-togliatti.jpg');">🌲 Тольяттинский лес — сосны и тишина</div>
+        <div class="swiper-slide" style="background-image: url('file:///C:/Users/Элинка/Desktop/приглашение/фото/набережная.webp');">🌊 Набережная Тольятти — волжский закат</div>
+        <div class="swiper-slide" style="background-image: url('file:///C:/Users/Элинка/Desktop/приглашение/фото/image.png');">Тольятти</div>
+      </div>
+      <div class="swiper-button-next"></div>
+      <div class="swiper-button-prev"></div>
+      <div class="swiper-pagination"></div>
+    </div>
+    <ul class="program-list">
+      <li>🔥 Прогулка по городу - автомобильной столице России.</li>
+      <li>💥 АвтоВАЗ, прогулка по лесу, набережная Волги.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- Самара -->
+<div id="modal-samara" class="modal">
+  <div class="modal-content">
+    <span class="modal-close">&times;</span>
+    <h2 style="color:#ff00c1">САМАРА</h2>
+    <div class="modal-gallery-swiper swiper modal-swiper" data-modal-swiper="samara">
+      <div class="swiper-wrapper">
+        <div class="swiper-slide" style="background-image: url('file:///C:/Users/Элинка/Desktop/приглашение/фото/i%20(1).webp');">🏞️ Самарская набережная — самая длинная в РФ</div>
+        <div class="swiper-slide" style="background-image: url('file:///C:/Users/Элинка/Desktop/приглашение/фото/1402072_original.jpg');">Самара</div>
+        <div class="swiper-slide" style="background-image: url('file:///C:/Users/Элинка/Desktop/приглашение/фото/i%20(2).webp');">🍺 Жигулёвское пиво — легендарный вкус</div>
+      </div>
+      <div class="swiper-button-next"></div>
+      <div class="swiper-button-prev"></div>
+      <div class="swiper-pagination"></div>
+    </div>
+    <ul class="program-list">
+      <li>🍻Самая длинная набережная, дигустация настоящего жигулёвского пива с завода.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- Подвальские террасы -->
+<div id="modal-podvalie" class="modal">
+  <div class="modal-content">
+    <span class="modal-close">&times;</span>
+    <h2 style="color:#ff00c1">ПОДВАЛЬСКИЕ ТЕРРАСЫ</h2>
+    <div class="modal-gallery-swiper swiper modal-swiper" data-modal-swiper="podvalie">
+      <div class="swiper-wrapper">
+        <div class="swiper-slide" style="background-image: url('file:///C:/Users/Элинка/Desktop/приглашение/фото/подвальские%20терасы.webp');">🏠 Мой дом на террасах — вид с веранды</div>
+        <div class="swiper-slide" style="background-image: url('file:///C:/Users/Элинка/Desktop/приглашение/фото/153433826980442914.jpg');">⛴️ ОМИК — кораблик до террас</div>
+        <div class="swiper-slide" style="background-image: url('file:///C:/Users/Элинка/Desktop/приглашение/фото/XXXL.webp');">🐟 Наша рыбалка — щука, судак, сом</div>
+        <div class="swiper-slide" style="background-image: url('file:///C:/Users/Элинка/Desktop/приглашение/фото/Подвалье_Ильинские_горы.jpg');">🔥 Шашлыки и мангал с видом на Волгу</div>
+        <div class="swiper-slide" style="background-image: url('file:///C:/Users/Элинка/Desktop/приглашение/фото/XXXL%20(1).webp');">🛁 Баня с вениками — классика</div>
+      </div>
+      <div class="swiper-button-next"></div>
+      <div class="swiper-button-prev"></div>
+      <div class="swiper-pagination"></div>
+    </div>
+    <ul class="program-list">
+      <li>⛴️ ДОБИРАЕМСЯ: На машине или ОМИКЕ (кораблик).</li>
+      <li>🏠 Мангал, отдых на природе, рыбалка.</li>
+    </ul>
+    <div><span class="badge-rout">🐟 КЛЁВ</span> <span class="fish-tag">Щука до 7кг</span> <span class="fish-tag">Судак</span> <span class="fish-tag">Сом</span></div>
+  </div>
+</div>
+
+<!-- 10-й Кордон -->
+<div id="modal-kordon" class="modal">
+  <div class="modal-content">
+    <span class="modal-close">&times;</span>
+    <h2 style="color:#ff00c1">10-й КОРДОН</h2>
+    <div class="modal-gallery-swiper swiper modal-swiper" data-modal-swiper="kordon">
+      <div class="swiper-wrapper">
+        <div class="swiper-slide" style="background-image: url('file:///C:/Users/Элинка/Desktop/приглашение/фото/XXXL%20(3).webp');">🌲 Лесная дорога к кордону</div>
+        <div class="swiper-slide" style="background-image: url('file:///C:/Users/Элинка/Desktop/приглашение/фото/XXXL%20(5).webp');">🚙 УАЗик — только полный привод</div>
+        <div class="swiper-slide" style="background-image: url('file:///C:/Users/Элинка/Desktop/приглашение/фото/XXXL%20(2).webp');">🏕️ 10 Кордон — база в глуши</div>
+      </div>
+      <div class="swiper-button-next"></div>
+      <div class="swiper-button-prev"></div>
+      <div class="swiper-pagination"></div>
+    </div>
+    <ul class="program-list">
+      <li>🚙 ТОЛЬКО УАЗИК! Полный привод, лесное бездорожье.</li>
+      <li>🏕️ Легендарная база, дикая природа, непуганая рыба.</li>
+      <li>🔥 Уха на костре, баня.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- Казань -->
+<div id="modal-kazan" class="modal">
+  <div class="modal-content">
+    <span class="modal-close">&times;</span>
+    <h2 style="color:#ff00c1">КАЗАНЬ</h2>
+    <div class="modal-gallery-swiper swiper modal-swiper" data-modal-swiper="kazan">
+      <div class="swiper-wrapper">
+        <div class="swiper-slide" style="background-image: url('file:///C:/Users/Элинка/Desktop/приглашение/фото/i%20(8).webp');">🏰 Казанский Кремль — сердце города</div>
+        <div class="swiper-slide" style="background-image: url('file:///C:/Users/Элинка/Desktop/приглашение/фото/i%20(6).webp');">Казанская набережная</div>
+        <div class="swiper-slide" style="background-image: url('file:///C:/Users/Элинка/Desktop/приглашение/фото/i%20(5).webp');">💦 Аквапарк «Ривьера»</div>
+        <div class="swiper-slide" style="background-image: url('file:///C:/Users/Элинка/Desktop/приглашение/фото/XXL_height.webp');">Парк Урам и мост Миллениум</div>
+      </div>
+      <div class="swiper-button-next"></div>
+      <div class="swiper-button-prev"></div>
+      <div class="swiper-pagination"></div>
+    </div>
+    <ul class="program-list">
+      <li>🏰 Кремль, Кул-Шариф, падающая башня.</li>
+      <li>💦 Аквапарк «Ривьера», .</li>
+      <li>🍻 Барная улица, чак-чак до отвала.</li>
+    </ul>
+  </div>
+</div>
+
+<div class="container" id="map" style="max-width:1300px; margin:0 auto; padding:2rem;">
+  <h2 style="text-align: center; color:#ff8800;">🗺️ ЖИВОЙ МАРШРУТ</h2>
+  <div class="map-wrapper"><div id="dynamic-map"></div><p style="margin-top:12px; color:#00ff9d; text-align:center;">🔥 КЛИК ПО МЕТКАМ — ДЕТАЛИ. ОМИК, УАЗ, ДИКАРСТВО 🔥</p></div>
+</div>
+
+<div class="container" id="gallery" style="max-width:1300px; margin:0 auto; padding:2rem;">
+  <h2 style="text-align: center;">📸 МОМЕНТЫ, КОТОРЫЕ ЖДУТ</h2>
+  <div class="swiper-main swiper">
+    <div class="swiper-wrapper">
+      <div class="swiper-slide" style="background-image: url('file:///C:/Users/Элинка/Desktop/приглашение/фото/scale_1200%20(1).jpg');">Казань озеро Кабан</div>
+      <div class="swiper-slide" style="background-image: url('file:///C:/Users/Элинка/Desktop/приглашение/фото/XXL_height%20(1).webp');">Казань</div>
+      <div class="swiper-slide" style="background-image: url('file:///C:/Users/Элинка/Desktop/приглашение/фото/scale_1200.png');">Тольятти Жигулевские горы</div>
+      <div class="swiper-slide" style="background-image: url('file:///C:/Users/Элинка/Desktop/приглашение/фото/i%20(11).webp');">Тольятти</div>
+      <div class="swiper-slide" style="background-image: url('file:///C:/Users/Элинка/Desktop/приглашение/фото/orig.jpg');">Термальный комплекс Казань</div>
+      <div class="swiper-slide" style="background-image: url('file:///C:/Users/Элинка/Desktop/приглашение/фото/i%20(12).webp');">Тольятти замок Грибальди</div>
+      <div class="swiper-slide" style="background-image: url('file:///C:/Users/Элинка/Desktop/приглашение/фото/i%20(13).webp');">Подвальские террасы</div>
+      <div class="swiper-slide" style="background-image: url('file:///C:/Users/Элинка/Desktop/приглашение/фото/DJI_0893.jpg');">Подвалье</div>
+      <div class="swiper-slide" style="background-image: url('file:///C:/Users/Элинка/Desktop/приглашение/фото/XXXL%20(6).webp');">Природа</div>
+      <div class="swiper-slide" style="background-image: url('приглашение/фото/XXXL%20(4).webp');">Подвалье</div>
+    </div>
+    <div class="swiper-pagination"></div>
+    <div class="swiper-button-next"></div>
+    <div class="swiper-button-prev"></div>
+  </div>
+</div>
+
+<div class="container" style="max-width:1300px; margin:0 auto; padding:2rem;">
+  <div style="display: flex; flex-wrap: wrap; gap: 2rem; margin: 2rem 0;">
+    <div class="info-card-crazy" style="flex:1;"><span class="badge-rout">🐟 КЛЁВ</span><h3 style="margin-top:0.5rem;">Кого ловим</h3><p>Щука до 7кг, судак, сом, жерех, окунь-горбач.</p><div><span class="fish-tag">ЩУКА</span> <span class="fish-tag">СУДАК</span> <span class="fish-tag">СОМ</span></div></div>
+    <div class="info-card-crazy" style="flex:1;"><span class="badge-rout">🚤 ТРАНСПОРТ</span><h3 style="margin-top:0.5rem;">Машина, ОМИК И УАЗ</h3><p>До Подвалья на омике (кораблик) или на машине, до 10 кордона — НА УАЗИКЕ.</p></div>
+    <div class="info-card-crazy" style="flex:1;"><span class="badge-rout">🏠 УЮТ</span><h3 style="margin-top:0.5rem;"></h3><p>Мангал, баня, веранда над Волгой. Свой дом на террасах.</p></div>
+  </div>
+</div>
+
+<div class="container" id="contacts" style="max-width:1300px; margin:0 auto; padding:2rem;">
+  <div style="background:#0a0a0a; border:3px solid #ff00c1; padding: 2rem; text-align: center; box-shadow: 10px 10px 0 #ff8800;">
+    <h3 style="color:#ff8800;">✈️ ГОТОВ СОРВАТЬСЯ?</h3>
+    <p>Перелёт Ташкент—Самара / Казань—Ташкент ~$250-300, еда ~$100, жильё ~$70.</p>
+  </div>
+</div>
+
+<footer>
+  <p>© 2025 · ВОЛЖСКИЙ РЕЙС | ОМИК, УАЗИК, НЕОН И ДРАЙВ. ДЛЯ СВОИХ.</p>
+</footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+<script>
+  AOS.init({ duration: 800, once: false });
+  
+  // Главный свайпер (галерея внизу)
+  new Swiper('.swiper-main', { 
+    loop: true, 
+    autoplay: { delay: 2800 }, 
+    pagination: { el: '.swiper-pagination' }, 
+    navigation: { nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' } 
+  });
+  
+  // Карта
+  const map = L.map('dynamic-map').setView([53.85, 49.5], 7.2);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution: '&copy; OSM', subdomains: 'abcd' }).addTo(map);
+  const pts = [
+    { name: "Аэропорт Самара", coords: [53.5066, 50.1555], info: "Встреча" },{ name: "Тольятти", coords: [53.5207, 49.3897], info: "АвтоВАЗ, лес, набережная" },
+    { name: "Самара", coords: [53.1959, 50.1002],  },{ name: "Подвальские террасы", coords: [53.683396, 48.834855], info: "Природа, шашлыки, рыбалка" },
+    { name: "10-й Кордон", coords: [53.6688, 48.8206], info: "Природа, уха, шашлыки" },{ name: "Казань", coords: [55.7961, 49.1064], info: "Кремль, набережная и куча веселья" }
+  ];
+  const neonIcon = L.divIcon({ html: '⚡', iconSize: [28,28], className: 'neon-marker', popupAnchor: [0,-12] });
+  pts.forEach(p => L.marker(p.coords, { icon: neonIcon }).addTo(map).bindPopup(`<b style="color:#ff00c1">${p.name}</b><br>${p.info}`));
+  L.polyline(pts.map(p=>p.coords), { color: '#ff8800', weight: 5, opacity: 0.9, dashArray: '5, 12' }).addTo(map);
+  map.fitBounds(L.polyline(pts.map(p=>p.coords)).getBounds());
+  const style = document.createElement('style'); style.innerHTML = `.neon-marker { background: #ff00c1; border-radius: 0px; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; border: 2px solid #00ff9d; transform: rotate(45deg); }`; document.head.appendChild(style);
+  
+  // Модалки с каруселями — инициализируем свайперы при открытии
+  const modals = document.querySelectorAll('.modal');
+  const modalSwipers = {};
+  
+  function initModalSwiper(modalId) {
+    const modal = document.getElementById(modalId);
+    const swiperContainer = modal.querySelector('.modal-swiper');
+    if (swiperContainer && !modalSwipers[modalId]) {
+      modalSwipers[modalId] = new Swiper(swiperContainer, {
+        loop: true,
+        navigation: { nextEl: swiperContainer.querySelector('.swiper-button-next'), prevEl: swiperContainer.querySelector('.swiper-button-prev') },
+        pagination: { el: swiperContainer.querySelector('.swiper-pagination'), clickable: true },
+        autoplay: { delay: 4000, disableOnInteraction: false }
+      });
+    }
+  }
+  
+  document.querySelectorAll('.flip-card').forEach(card => card.addEventListener('click', () => { 
+    const m = card.getAttribute('data-modal'); 
+    if(m) {
+      const modalId = `modal-${m}`;
+      document.getElementById(modalId).classList.add('active');
+      initModalSwiper(modalId);
+    }
+  }));
+  
+  document.querySelectorAll('.modal-close').forEach(btn => btn.addEventListener('click', () => btn.closest('.modal').classList.remove('active')));
+  window.addEventListener('click', e => modals.forEach(m => { if(e.target === m) m.classList.remove('active'); }));
+  document.getElementById('scrollBtn').addEventListener('click', () => document.getElementById('flip').scrollIntoView({ behavior: 'smooth' }));
+</script>
+</body>
+</html>
